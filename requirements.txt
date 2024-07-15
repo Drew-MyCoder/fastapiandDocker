@@ -8,3 +8,5 @@ pydantic_settings
 asyncpg
 psycopg2
 starlette
+passlib
+bcrypt
