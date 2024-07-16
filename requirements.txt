@@ -10,3 +10,5 @@ psycopg2
 starlette
 passlib
 bcrypt
+python-multipart
+PyJWT
