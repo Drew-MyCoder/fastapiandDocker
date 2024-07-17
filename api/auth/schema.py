@@ -8,3 +8,7 @@ class UserList(BaseModel):
 
 class UserCreate(UserList):
     password: str 
+
+
+class ForgotPassword(BaseModel):
+    email: str
