@@ -92,7 +92,7 @@ async def forgot_password(request: schema.ForgotPassword):
     </html>
     """.format(request.email, reset_code)
     # enable after filling mail info in .env file
-    # await emailUtil.send_mail(subject, recipient, message)
+    # await emailUtil.send_email(subject, recipient, message)
 
     return {
         "reset_code": reset_code,
