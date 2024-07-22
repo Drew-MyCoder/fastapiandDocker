@@ -4,6 +4,7 @@ from api.auth import crud
 from api.utils import cryptoUtil, jwtUtil, constantUtil, emailUtil
 from fastapi.security import OAuth2PasswordRequestForm
 import uuid
+from api.exceptions.business import BusinessException
 
 router = APIRouter(
     prefix="/api/v1"
@@ -15,7 +16,8 @@ async def register(user: schema.UserCreate):
     # check if user exists
     result = await crud.find_exist_user(user.email)
     if result:
-        raise HTTPException(status_code=404, detail="User already registered.")
+        # raise HTTPException(status_code=404, detail="User already registered.")
+        raise BusinessException(status_code=409, detail="User already registered")
 
     # create new user
     user.password = cryptoUtil.hash_password(user.password)
@@ -98,4 +100,29 @@ async def forgot_password(request: schema.ForgotPassword):
         "reset_code": reset_code,
         "code": 200,
         "message": "We've sent an email with instructions to reset your password."
+    }
+
+
+@router.patch("/auth/reset-password")
+async def reset_password(request: schema.ResetPassword):
+    # check valid reset password token
+    reset_token = await crud.check_reset_password_token(request.reset_password_token)
+    if not reset_token:
+        raise HTTPException(status_code=404, detail="Reset password token has expired, please request a new one")
+
+    # check both new and confirm password matched
+    if request.new_password != request.confirm_password:
+        raise HTTPException(status_code=404, detail="New password must match confirm password")
+
+    # reset new password
+    forgot_password_object = schema.ForgotPassword(**reset_token)
+    new_hashed_password = cryptoUtil.hash_password(request.new_password)
+    await crud.reset_password(new_hashed_password, forgot_password_object.email)
+
+    # disable reset code when already used
+    await crud.disable_reset_code(request.reset_password_token, forgot_password_object.email)
+
+    return {
+        "code": 200,
+        "message": "Password has been reset successfully"
     }
