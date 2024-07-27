@@ -7,6 +7,11 @@ def find_exist_user(email: str):
     return database.fetch_one(query, values={"email": email})
 
 
+def find_blacklist_token(token: str):
+    query = "select * from py_blacklists where token=:token"
+    return database.fetch_one(query, values={"token": token})
+
+
 def save_user(user: schema.UserCreate):
     query = "INSERT INTO py_users VALUES (nextval('user_id_seq'), :email, :password, :fullname, now() at time zone 'UTC', '1')"
     return database.execute(query, values={"email":user.email, "password":user.password, "fullname":user.fullname})
