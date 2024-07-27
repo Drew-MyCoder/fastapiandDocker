@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, File, UploadFile
 from api.auth import schema as auth_schema, crud as auth_crud
 from api.users import schema as user_schema, crud as user_crud
 from api.utils import jwtUtil, cryptoUtil
-
+import os
+from PIL import Image
 router = APIRouter(
     prefix="/api/v1"
 )
@@ -87,3 +88,59 @@ async def logout(
         "status_code": status.HTTP_200_OK,
         "detail": "User logged out successfully"
     }
+
+
+@router.post("/user/upload-profile-image")
+async def upload_profile_image(
+    file: UploadFile = File(...),
+    current_user: auth_schema.UserList = Depends(jwtUtil.get_current_active_user)
+):
+    try:
+        cwd = os.getcwd()
+        path_image_dir = "upload-images/user/profile/" + str(current_user.id) + "/"
+        full_image_path = os.path.join(cwd, path_image_dir, file.filename)
+
+        print(full_image_path)
+
+        # create directory if it does not exist
+        if not os.path.exists(path_image_dir):
+            os.mkdir(path_image_dir)
+
+        # rename file to 'profile.png'
+        file_name = full_image_path.replace(file.filename, "profile.png")
+
+        # write file
+        with open(file_name, 'wb+') as f:
+            f.write(file.file.read())
+            f.flush()
+            f.close()
+
+        return {
+            "profile_image": os.path.join(path_image_dir, "profile.png")
+        }
+
+    except Exception as e:
+        print(e)
+
+
+@router.get("/user/upload-profile-image")
+async def get_profile_image(
+    current_user: auth_schema.UserList = Depends(jwtUtil.get_current_active_user)
+):
+    try:
+        cwd = os.getcwd()
+        path_image_dir = "upload-images/user/profile/" + str(current_user.id) + "/"
+        full_image_path = os.path.join(cwd, path_image_dir, "profile.png")
+
+        # check if image exists
+        if os.path.exists(full_image_path):
+            # resize profile to 400x400
+            image = Image.open(full_image_path)
+            image.thumbnail((400, 400))
+
+        return {
+            "profile_image": os.path.join(path_image_dir, "profile_400x400.png")
+        }
+
+    except Exception as e:
+        print(e)
