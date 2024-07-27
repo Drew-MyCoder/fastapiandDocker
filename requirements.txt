@@ -13,3 +13,4 @@ bcrypt
 python-multipart
 PyJWT
 fastapi-mail
+Pillow
