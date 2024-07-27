@@ -7,5 +7,6 @@ services:
       - 8000:80
     volumes:
       - ./api:/api
+      - ./upload-images/:/upload-images/user/
     env_file:
       - ./api/.env
