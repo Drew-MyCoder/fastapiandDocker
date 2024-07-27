@@ -20,3 +20,10 @@ codes = Table(
     Column("status", String(1)),
     Column("expired_in", DateTime)
 )
+
+
+blacklists = Table(
+    "py_blacklists", metadata,
+    Column("token", String(250), unique=True),
+    Column("email", String(100)),
+)
