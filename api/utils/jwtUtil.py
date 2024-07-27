@@ -24,6 +24,10 @@ oauth2_scheme = OAuth2PasswordBearer(
 )
 
 
+def get_user_token(token: str = Depends(oauth2_scheme)):
+    return token
+
+
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -37,11 +41,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         if username is None:
             raise credentials_exception
 
+        # check blacklist token
+        blacklist_token = await crud.find_blacklist_token(token)
+        if blacklist_token:
+            raise credentials_exception
+
         # check if user exist
         result = await crud.find_exist_user(username)
         if not result:
             raise HTTPException(
-                status_code=404, 
+                status_code=status.HTTP_404_NOT_FOUND, 
                 detail="User not registered.")
             
         return schema.UserList(**result)
