@@ -90,7 +90,7 @@ async def logout(
     }
 
 
-@router.post("/user/upload-profile-image")
+@router.patch("/user/upload-profile-image")
 async def upload_profile_image(
     file: UploadFile = File(...),
     current_user: auth_schema.UserList = Depends(jwtUtil.get_current_active_user)
